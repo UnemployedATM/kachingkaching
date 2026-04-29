@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings as SettingsIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { Settings as SettingsIcon, ChevronDown, ChevronUp, Link2, Check } from "lucide-react";
 
 export default function Settings() {
   const { user, staffRecord, reloadStaff } = useAuth();
@@ -29,6 +29,16 @@ export default function Settings() {
   const [saving,   setSaving]   = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
   const [errors,   setErrors]   = useState({});
+  const [copied,   setCopied]   = useState(false);
+
+  const inviteLink = `https://kching-answering.vercel.app?studio=${staffRecord?.studio_id ?? ''}`;
+
+  function copyInviteLink() {
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   useEffect(() => {
     if (staffRecord && user) {
@@ -187,6 +197,23 @@ export default function Settings() {
           </Button>
         </div>
       </form>
+
+      {/* Invite Clients */}
+      <Card className="border border-border/60 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Invite Clients</CardTitle>
+          <p className="text-sm text-muted-foreground">Share this link with clients so they can join your studio.</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2">
+            <span className="flex-1 text-sm text-muted-foreground truncate font-mono">{inviteLink}</span>
+          </div>
+          <Button type="button" variant="outline" onClick={copyInviteLink} className="gap-2">
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Link2 className="h-4 w-4" />}
+            {copied ? 'Copied!' : 'Copy Invite Link'}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Password Management */}
       <Card className="border border-border/60 shadow-sm">
