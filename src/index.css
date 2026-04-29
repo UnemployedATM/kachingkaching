@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,77 +6,80 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', sans-serif;
-    --font-display: 'Playfair Display', serif;
+    --font-sans: 'Lexend', sans-serif;
+    --font-display: 'Lexend', sans-serif;
 
-    --background: 40 20% 98%;
-    --foreground: 160 10% 12%;
-    --card: 40 25% 99%;
-    --card-foreground: 160 10% 12%;
-    --popover: 40 25% 99%;
-    --popover-foreground: 160 10% 12%;
-    --primary: 239 84% 67%;
+    /* Aura Wellness — Material Design 3 green palette */
+    --background: 150 18% 97%;        /* #f7faf8 */
+    --foreground: 165 9% 10%;         /* #181c1b */
+    --card: 0 0% 100%;                /* #ffffff */
+    --card-foreground: 165 9% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 165 9% 10%;
+    --primary: 122 25% 33%;           /* #3f6840 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 10% 20%;
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 8% 46%;
-    --accent: 239 60% 95%;
-    --accent-foreground: 239 50% 30%;
+    --secondary: 150 10% 93%;
+    --secondary-foreground: 165 9% 15%;
+    --muted: 150 10% 93%;
+    --muted-foreground: 108 4% 45%;   /* #72796f */
+    --accent: 118 20% 91%;            /* light green tint */
+    --accent-foreground: 122 25% 18%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 239 84% 67%;
-    --chart-1: 239 84% 67%;
-    --chart-2: 262 52% 47%;
-    --chart-3: 199 89% 48%;
-    --chart-4: 43 96% 56%;
-    --chart-5: 27 87% 67%;
+    --border: 96 10% 78%;             /* #c2c9bd */
+    --input: 96 10% 78%;
+    --ring: 122 25% 33%;
+    --chart-1: 122 25% 33%;
+    --chart-2: 205 35% 36%;           /* secondary blue-gray */
+    --chart-3: 32 100% 28%;           /* tertiary orange */
+    --chart-4: 30 68% 55%;
+    --chart-5: 118 21% 57%;
     --radius: 0.75rem;
-    --sidebar-background: 220 20% 98%;
-    --sidebar-foreground: 220 14% 20%;
-    --sidebar-primary: 239 84% 67%;
+
+    /* Sidebar */
+    --sidebar-background: 150 18% 97%;
+    --sidebar-foreground: 165 9% 15%;
+    --sidebar-primary: 122 25% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 60% 95%;
-    --sidebar-accent-foreground: 239 50% 30%;
-    --sidebar-border: 220 13% 90%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 118 20% 91%;
+    --sidebar-accent-foreground: 122 25% 18%;
+    --sidebar-border: 96 10% 78%;
+    --sidebar-ring: 122 25% 33%;
   }
 
   .dark {
-    --background: 160 10% 7%;
-    --foreground: 40 15% 95%;
-    --card: 160 10% 9%;
-    --card-foreground: 40 15% 95%;
-    --popover: 160 10% 9%;
-    --popover-foreground: 40 15% 95%;
-    --primary: 239 84% 72%;
+    --background: 165 10% 7%;
+    --foreground: 150 14% 94%;
+    --card: 165 10% 9%;
+    --card-foreground: 150 14% 94%;
+    --popover: 165 10% 9%;
+    --popover-foreground: 150 14% 94%;
+    --primary: 122 25% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 10% 18%;
-    --secondary-foreground: 220 14% 85%;
-    --muted: 220 10% 16%;
-    --muted-foreground: 220 8% 55%;
-    --accent: 239 40% 22%;
-    --accent-foreground: 239 60% 80%;
+    --secondary: 165 8% 15%;
+    --secondary-foreground: 150 14% 88%;
+    --muted: 165 8% 15%;
+    --muted-foreground: 150 8% 55%;
+    --accent: 122 20% 18%;
+    --accent-foreground: 118 20% 80%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 20%;
-    --input: 220 10% 20%;
-    --ring: 239 84% 72%;
-    --chart-1: 239 84% 72%;
-    --chart-2: 262 52% 60%;
-    --chart-3: 199 89% 55%;
-    --chart-4: 43 96% 60%;
-    --chart-5: 27 87% 65%;
-    --sidebar-background: 220 14% 9%;
-    --sidebar-foreground: 220 14% 88%;
-    --sidebar-primary: 239 84% 72%;
+    --border: 165 8% 20%;
+    --input: 165 8% 20%;
+    --ring: 122 25% 48%;
+    --chart-1: 122 25% 55%;
+    --chart-2: 205 35% 52%;
+    --chart-3: 32 80% 48%;
+    --chart-4: 30 68% 60%;
+    --chart-5: 118 21% 62%;
+    --sidebar-background: 165 12% 8%;
+    --sidebar-foreground: 150 14% 88%;
+    --sidebar-primary: 122 25% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 30% 18%;
-    --sidebar-accent-foreground: 220 14% 88%;
-    --sidebar-border: 220 10% 16%;
-    --sidebar-ring: 239 84% 72%;
+    --sidebar-accent: 122 18% 16%;
+    --sidebar-accent-foreground: 150 14% 88%;
+    --sidebar-border: 165 8% 16%;
+    --sidebar-ring: 122 25% 48%;
   }
 }
 
@@ -86,6 +89,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
+    font-family: 'Lexend', sans-serif;
   }
 }

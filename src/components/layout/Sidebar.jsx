@@ -92,7 +92,7 @@ export default function Sidebar({ open, onClose }) {
           {/* Brand */}
           <div className="p-6 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
+              <div className="h-9 w-9 rounded-xl bg-[#3f6840] flex items-center justify-center shadow-sm">
                 <span className="text-white text-base font-bold">S</span>
               </div>
               <div>
@@ -124,8 +124,8 @@ export default function Sidebar({ open, onClose }) {
                       src={item.icon}
                       trigger={isActive ? "loop" : "hover"}
                       size={18}
-                      primary={isActive ? "#6366f1" : "#94a3b8"}
-                      secondary={isActive ? "#818cf8" : "#cbd5e1"}
+                      primary={isActive ? "#3f6840" : "#94a3b8"}
+                      secondary={isActive ? "#7da87b" : "#cbd5e1"}
                     />
                     {item.label}
                   </Link>
