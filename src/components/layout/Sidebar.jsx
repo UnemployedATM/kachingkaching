@@ -1,68 +1,69 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, Users, CalendarDays, Leaf, CreditCard, Calendar, LayoutGrid, BookOpen, BadgeCheck, LogOut, Settings, Info } from "lucide-react";
+import { LogOut, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import LordIcon from "@/components/ui/LordIcon";
 
 const navItems = [
   {
     path: "/",
     label: "Dashboard",
-    icon: LayoutDashboard,
+    icon: "https://cdn.lordicon.com/wjyqkiew.json",
     info: "Overview of today's activity — upcoming bookings, revenue summary, attendance stats, and recent clients.",
   },
   {
     path: "/calendar",
     label: "Calendar",
-    icon: Calendar,
+    icon: "https://cdn.lordicon.com/ogkflacg.json",
     info: "Visual day/week view of all scheduled class sessions. Quickly see what's happening and when.",
   },
   {
     path: "/classes",
     label: "Classes",
-    icon: BookOpen,
+    icon: "https://cdn.lordicon.com/kndkiwmb.json",
     info: "Manage your class types (e.g. Yoga, Pilates) and schedule individual sessions with instructors and capacity.",
   },
   {
     path: "/bookings",
     label: "Bookings",
-    icon: CalendarDays,
+    icon: "https://cdn.lordicon.com/abfymgfk.json",
     info: "All client reservations in one place. Add, edit, cancel, or confirm bookings and track attendance.",
   },
   {
     path: "/clients",
     label: "Clients",
-    icon: Users,
+    icon: "https://cdn.lordicon.com/dnoiydox.json",
     info: "Your full client directory. View profiles, booking history, payment records, and personal notes.",
   },
   {
     path: "/memberships",
     label: "Memberships",
-    icon: BadgeCheck,
+    icon: "https://cdn.lordicon.com/sbiheqdr.json",
     info: "Create membership plans (drop-in, class packs, monthly) and assign them to clients to track credits and expiry.",
   },
   {
     path: "/payments",
     label: "Payments",
-    icon: CreditCard,
+    icon: "https://cdn.lordicon.com/dpirpnzh.json",
     info: "Log and track all payments. Mark pending payments as paid, issue refunds, and view revenue totals.",
   },
   {
     path: "/inventory",
     label: "Inventory",
-    icon: Package,
+    icon: "https://cdn.lordicon.com/msetyebo.json",
     info: "Track studio equipment — mats, reformers, props. Monitor status (available, maintenance, retired) and quantities.",
   },
   {
     path: "/floor-plan",
     label: "Floor Plan",
-    icon: LayoutGrid,
+    icon: "https://cdn.lordicon.com/aniibgkj.json",
     info: "Visual 5×5 grid of your studio space. Assign equipment to specific slots to map your physical layout.",
   },
   {
     path: "/settings",
     label: "Settings",
-    icon: Settings,
+    icon: "https://cdn.lordicon.com/hwcrbhbp.json",
     info: "Update your personal profile, name, phone, email address, and change your password.",
   },
 ];
@@ -88,10 +89,11 @@ export default function Sidebar({ open, onClose }) {
             open ? "translate-x-0" : "-translate-x-full"
           )}
         >
+          {/* Brand */}
           <div className="p-6 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-primary" />
+              <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
+                <span className="text-white text-base font-bold">S</span>
               </div>
               <div>
                 <h1 className="font-display text-lg font-semibold text-sidebar-foreground leading-tight">
@@ -102,7 +104,8 @@ export default function Sidebar({ open, onClose }) {
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {/* Nav */}
+          <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -117,7 +120,13 @@ export default function Sidebar({ open, onClose }) {
                         : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                     )}
                   >
-                    <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} />
+                    <LordIcon
+                      src={item.icon}
+                      trigger={isActive ? "loop" : "hover"}
+                      size={18}
+                      primary={isActive ? "#6366f1" : "#94a3b8"}
+                      secondary={isActive ? "#818cf8" : "#cbd5e1"}
+                    />
                     {item.label}
                   </Link>
 
@@ -140,8 +149,9 @@ export default function Sidebar({ open, onClose }) {
             })}
           </nav>
 
+          {/* User footer */}
           <div className="p-4 border-t border-sidebar-border space-y-2">
-            <div className="px-3 py-2 rounded-lg bg-primary/5">
+            <div className="px-3 py-2 rounded-lg bg-primary/8">
               <p className="text-xs font-medium text-foreground truncate">
                 {staffRecord?.full_name || user?.email || "Admin"}
               </p>
