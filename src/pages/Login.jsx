@@ -15,12 +15,15 @@ export default function Login() {
   const [error, setError]       = useState('');
   const [message, setMessage]   = useState('');
 
-  // Detect Supabase password-recovery redirect (hash contains access_token + type=recovery)
+  // Detect Supabase password-recovery redirect
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.includes('type=recovery') && hash.includes('access_token')) {
       setMode('new-password');
-      // Clear the hash so it doesn't persist on refresh
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (hash.includes('error=access_denied') || hash.includes('otp_expired')) {
+      setError('That reset link has expired. Request a new one below.');
+      setMode('reset');
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
