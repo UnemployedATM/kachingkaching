@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function Login() {
-  const [mode, setMode]         = useState('signin'); // 'signin' | 'signup'
+  const [mode, setMode]         = useState('signin'); // 'signin' | 'signup' | 'reset'
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -19,10 +19,23 @@ export default function Login() {
     setError('');
     setMessage('');
 
+    if (mode === 'reset') {
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (authError) {
+        setError(authError.message);
+      } else {
+        setMessage('Password reset email sent — check your inbox.');
+        setMode('signin');
+      }
+      setLoading(false);
+      return;
+    }
+
     if (mode === 'signin') {
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) { setError(authError.message); setLoading(false); }
-      // on success, onAuthStateChange in AuthContext updates state → App redirects automatically
     } else {
       const { error: authError } = await supabase.auth.signUp({ email, password });
       if (authError) {
@@ -36,6 +49,8 @@ export default function Login() {
     }
   };
 
+  const switchMode = (next) => { setMode(next); setError(''); setMessage(''); };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-8">
@@ -45,7 +60,9 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-display font-semibold text-foreground">Serenity</h1>
           <p className="text-sm text-muted-foreground">
-            {mode === 'signin' ? 'Sign in to your studio dashboard' : 'Create your account'}
+            {mode === 'signin' ? 'Sign in to your studio dashboard'
+              : mode === 'signup' ? 'Create your account'
+              : 'Reset your password'}
           </p>
         </div>
 
@@ -61,36 +78,66 @@ export default function Login() {
               autoFocus
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+
+          {mode !== 'reset' && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === 'signin' && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('reset')}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          )}
 
           {error   && <p className="text-sm text-destructive">{error}</p>}
           {message && <p className="text-sm text-primary">{message}</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading
-              ? (mode === 'signin' ? 'Signing in…' : 'Creating account…')
-              : (mode === 'signin' ? 'Sign in' : 'Create account')}
+              ? '...'
+              : mode === 'signin' ? 'Sign in'
+              : mode === 'signup' ? 'Create account'
+              : 'Send reset email'}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            type="button"
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setMessage(''); }}
-            className="text-primary hover:underline font-medium"
-          >
-            {mode === 'signin' ? 'Sign up' : 'Sign in'}
-          </button>
+          {mode === 'reset' ? (
+            <>
+              Back to{' '}
+              <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
+                Sign in
+              </button>
+            </>
+          ) : mode === 'signin' ? (
+            <>
+              Don't have an account?{' '}
+              <button type="button" onClick={() => switchMode('signup')} className="text-primary hover:underline font-medium">
+                Sign up
+              </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
+              <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
+                Sign in
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>
