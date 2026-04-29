@@ -1,0 +1,51 @@
+{
+  "name": "Equipment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Equipment name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "massage_table",
+        "pilates_reformer",
+        "meditation_pod",
+        "yoga_mat",
+        "therapy_chair",
+        "sauna",
+        "steam_room",
+        "other"
+      ],
+      "description": "Equipment type/category"
+    },
+    "total_quantity": {
+      "type": "number",
+      "description": "Total units available"
+    },
+    "description": {
+      "type": "string",
+      "description": "Equipment description"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "maintenance",
+        "retired"
+      ],
+      "default": "available",
+      "description": "Equipment status"
+    },
+    "grid_slot_id": {
+      "type": "string",
+      "description": "Grid slot ID on the studio floor plan (e.g. slot_1, slot_2...)"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "total_quantity"
+  ]
+}

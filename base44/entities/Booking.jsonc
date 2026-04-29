@@ -1,0 +1,61 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to client"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Client name for display"
+    },
+    "equipment_id": {
+      "type": "string",
+      "description": "Reference to equipment"
+    },
+    "equipment_name": {
+      "type": "string",
+      "description": "Equipment name for display"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Booking date"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM)"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Duration in minutes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "booked",
+        "completed",
+        "cancelled",
+        "no_show"
+      ],
+      "default": "booked",
+      "description": "Booking status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Booking notes"
+    }
+  },
+  "required": [
+    "client_id",
+    "equipment_id",
+    "date",
+    "start_time",
+    "end_time"
+  ]
+}

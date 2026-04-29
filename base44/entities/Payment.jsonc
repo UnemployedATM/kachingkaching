@@ -1,0 +1,67 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "Reference to the booking"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Reference to the client"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Client name for display"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Payment amount in USD"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "refunded",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Payment status"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "bank_transfer",
+        "stripe",
+        "other"
+      ],
+      "default": "card",
+      "description": "Payment method used"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date payment was made"
+    },
+    "refund_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date refund was issued"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Payment notes"
+    },
+    "stripe_payment_intent_id": {
+      "type": "string",
+      "description": "Stripe payment intent ID if applicable"
+    }
+  },
+  "required": [
+    "booking_id",
+    "amount"
+  ]
+}

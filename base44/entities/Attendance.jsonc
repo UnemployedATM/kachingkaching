@@ -1,0 +1,41 @@
+{
+  "name": "Attendance",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "Reference to the booking"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Reference to the client"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Client name for display"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Session date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "attended",
+        "no_show",
+        "pending"
+      ],
+      "default": "pending",
+      "description": "Attendance status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Attendance notes"
+    }
+  },
+  "required": [
+    "booking_id",
+    "client_id"
+  ]
+}
