@@ -1,19 +1,54 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Leaf } from 'lucide-react';
+import { Leaf, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// ── Password strength helpers ──────────────────────────────────────────────
+function passwordStrength(pw) {
+  if (!pw) return 0;
+  const checks = [
+    pw.length >= 8,
+    /[A-Z]/.test(pw),
+    /[a-z]/.test(pw),
+    /[0-9]/.test(pw),
+    /[^A-Za-z0-9]/.test(pw),
+  ];
+  return checks.filter(Boolean).length;
+}
+const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Fair', 'Good', 'Strong'];
+const STRENGTH_COLORS = ['', 'bg-red-400', 'bg-orange-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
+const STRENGTH_TEXT   = ['', 'text-red-500', 'text-orange-500', 'text-orange-500', 'text-yellow-600', 'text-green-600'];
+
+function StrengthMeter({ password }) {
+  if (!password) return null;
+  const score = passwordStrength(password);
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-colors ${i <= score ? STRENGTH_COLORS[score] : 'bg-gray-200'}`}
+          />
+        ))}
+      </div>
+      <p className={`text-xs font-medium ${STRENGTH_TEXT[score]}`}>{STRENGTH_LABELS[score]}</p>
+    </div>
+  );
+}
+
 export default function Login() {
   // 'signin' | 'signup' | 'reset' | 'new-password'
-  const [mode, setMode]         = useState('signin');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode]               = useState('signin');
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
-  const [message, setMessage]   = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState('');
+  const [message, setMessage]         = useState('');
 
   // Detect Supabase password-recovery redirect
   useEffect(() => {
@@ -35,6 +70,16 @@ export default function Login() {
     setMessage('');
 
     if (mode === 'new-password') {
+      if (newPassword !== confirmPassword) {
+        setError('Passwords do not match.');
+        setLoading(false);
+        return;
+      }
+      if (passwordStrength(newPassword) < 3) {
+        setError('Choose a stronger password — mix uppercase, lowercase, and numbers.');
+        setLoading(false);
+        return;
+      }
       const { error: authError } = await supabase.auth.updateUser({ password: newPassword });
       if (authError) {
         setError(authError.message);
@@ -78,6 +123,10 @@ export default function Login() {
 
   const switchMode = (next) => { setMode(next); setError(''); setMessage(''); };
 
+  // Real-time confirm match (new-password mode)
+  const confirmMismatch = confirmPassword && newPassword !== confirmPassword;
+  const confirmMatch    = confirmPassword && newPassword === confirmPassword && newPassword.length > 0;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-8">
@@ -95,33 +144,57 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-            />
-          </div>
 
-          {mode === 'new-password' && (
+          {/* Email — hidden in new-password mode */}
+          {mode !== 'new-password' && (
             <div className="space-y-1.5">
-              <Label htmlFor="new-password">New Password</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
               />
             </div>
           )}
 
+          {/* New password + strength meter */}
+          {mode === 'new-password' && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min 8 chars, mix of types"
+                  required
+                  autoFocus
+                />
+                <StrengthMeter password={newPassword} />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat new password"
+                  required
+                  className={confirmMismatch ? 'border-red-400 focus-visible:ring-red-400' : confirmMatch ? 'border-green-500 focus-visible:ring-green-500' : ''}
+                />
+                {confirmMismatch && <p className="text-xs text-destructive">Passwords don't match.</p>}
+                {confirmMatch    && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="h-3 w-3" /> Passwords match</p>}
+              </div>
+            </>
+          )}
+
+          {/* Regular password field */}
           {mode !== 'reset' && mode !== 'new-password' && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -149,7 +222,11 @@ export default function Login() {
           {error   && <p className="text-sm text-destructive">{error}</p>}
           {message && <p className="text-sm text-primary">{message}</p>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || (mode === 'new-password' && !!confirmMismatch)}
+          >
             {loading
               ? '...'
               : mode === 'signin' ? 'Sign in'
@@ -174,14 +251,14 @@ export default function Login() {
                 Sign up
               </button>
             </>
-          ) : (
+          ) : mode !== 'new-password' ? (
             <>
               Already have an account?{' '}
               <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
                 Sign in
               </button>
             </>
-          )}
+          ) : null}
         </p>
       </div>
     </div>

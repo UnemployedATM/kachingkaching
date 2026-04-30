@@ -8,6 +8,40 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings as SettingsIcon, ChevronDown, ChevronUp, Link2, Check } from "lucide-react";
 
+// ── Password strength helpers ──────────────────────────────────────────────
+function passwordStrength(pw) {
+  if (!pw) return 0;
+  const checks = [
+    pw.length >= 8,
+    /[A-Z]/.test(pw),
+    /[a-z]/.test(pw),
+    /[0-9]/.test(pw),
+    /[^A-Za-z0-9]/.test(pw),
+  ];
+  return checks.filter(Boolean).length;
+}
+const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Fair', 'Good', 'Strong'];
+const STRENGTH_COLORS = ['', 'bg-red-400', 'bg-orange-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
+const STRENGTH_TEXT   = ['', 'text-red-500', 'text-orange-500', 'text-orange-500', 'text-yellow-600', 'text-green-600'];
+
+function StrengthMeter({ password }) {
+  if (!password) return null;
+  const score = passwordStrength(password);
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-colors ${i <= score ? STRENGTH_COLORS[score] : 'bg-gray-200'}`}
+          />
+        ))}
+      </div>
+      <p className={`text-xs font-medium ${STRENGTH_TEXT[score]}`}>{STRENGTH_LABELS[score]}</p>
+    </div>
+  );
+}
+
 export default function Settings() {
   const { user, staffRecord, reloadStaff } = useAuth();
   const { toast } = useToast();
@@ -25,11 +59,13 @@ export default function Settings() {
     confirm: "",
   });
 
-  const [pwOpen,   setPwOpen]   = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [pwSaving, setPwSaving] = useState(false);
-  const [errors,   setErrors]   = useState({});
-  const [copied,   setCopied]   = useState(false);
+  const [pwOpen,        setPwOpen]        = useState(false);
+  const [saving,        setSaving]        = useState(false);
+  const [pwSaving,      setPwSaving]      = useState(false);
+  const [errors,        setErrors]        = useState({});
+  const [copied,        setCopied]        = useState(false);
+  const [resetSent,     setResetSent]     = useState(false);
+  const [sendingReset,  setSendingReset]  = useState(false);
 
   const inviteLink = `https://kching-answering.vercel.app?studio=${staffRecord?.studio_id ?? ''}`;
 
@@ -78,7 +114,6 @@ export default function Settings() {
       return;
     }
 
-    // Update email in auth if changed
     if (form.email !== user.email) {
       const { error: emailError } = await supabase.auth.updateUser({ email: form.email });
       if (emailError) {
@@ -93,27 +128,41 @@ export default function Settings() {
     setSaving(false);
   };
 
+  const handleSendReset = async () => {
+    if (!user?.email) return;
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setSendingReset(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setResetSent(true);
+    }
+  };
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     const e2 = {};
-    if (pw.next.length < 6) e2.next = "Password must be at least 6 characters.";
-    if (pw.next !== pw.confirm) e2.confirm = "Passwords do not match.";
+    if (!pw.current)              e2.current  = "Enter your current password.";
+    if (pw.next.length < 8)       e2.next     = "Password must be at least 8 characters.";
+    if (passwordStrength(pw.next) < 3) e2.next = e2.next ?? "Choose a stronger password (mix upper, lower, numbers).";
+    if (pw.next !== pw.confirm)   e2.confirm  = "Passwords do not match.";
     setErrors(e2);
     if (Object.keys(e2).length > 0) return;
 
     setPwSaving(true);
 
-    // Verify current password only if provided
-    if (pw.current) {
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: pw.current,
-      });
-      if (verifyError) {
-        setErrors({ current: "Current password is incorrect." });
-        setPwSaving(false);
-        return;
-      }
+    // Verify current password
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: pw.current,
+    });
+    if (verifyError) {
+      setErrors({ current: "Current password is incorrect." });
+      setPwSaving(false);
+      return;
     }
 
     const { error: updateError } = await supabase.auth.updateUser({ password: pw.next });
@@ -128,6 +177,10 @@ export default function Settings() {
     setPwOpen(false);
     setPwSaving(false);
   };
+
+  // Real-time confirm match
+  const confirmMismatch = pw.confirm && pw.next !== pw.confirm;
+  const confirmMatch    = pw.confirm && pw.next === pw.confirm && pw.next.length > 0;
 
   return (
     <div className="p-4 lg:p-8 max-w-2xl mx-auto space-y-6">
@@ -221,7 +274,7 @@ export default function Settings() {
         <CardHeader className="pb-2">
           <button
             type="button"
-            onClick={() => { setPwOpen((o) => !o); setErrors({}); }}
+            onClick={() => { setPwOpen((o) => !o); setErrors({}); setResetSent(false); }}
             className="flex items-center justify-between w-full text-left"
           >
             <CardTitle className="text-base">Change Password</CardTitle>
@@ -232,22 +285,65 @@ export default function Settings() {
         {pwOpen && (
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
+
+              {/* Current password — required */}
               <div className="space-y-1.5">
-                <Label htmlFor="pw_current">Current Password <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                <Input id="pw_current" type="password" value={pw.current} onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} placeholder="Leave blank if you forgot it" />
+                <Label htmlFor="pw_current">Current Password</Label>
+                <Input
+                  id="pw_current"
+                  type="password"
+                  value={pw.current}
+                  onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))}
+                  placeholder="Enter current password"
+                />
                 {errors.current && <p className="text-xs text-destructive">{errors.current}</p>}
+
+                {/* Forgot escape hatch */}
+                {!resetSent ? (
+                  <button
+                    type="button"
+                    onClick={handleSendReset}
+                    disabled={sendingReset}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+                  >
+                    {sendingReset ? "Sending…" : "Forgot your current password? Send a reset email"}
+                  </button>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1">Reset email sent — check your inbox.</p>
+                )}
               </div>
+
+              {/* New password + strength meter */}
               <div className="space-y-1.5">
                 <Label htmlFor="pw_next">New Password</Label>
-                <Input id="pw_next" type="password" value={pw.next} onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} />
+                <Input
+                  id="pw_next"
+                  type="password"
+                  value={pw.next}
+                  onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))}
+                  placeholder="Min 8 chars, mix of types"
+                />
+                <StrengthMeter password={pw.next} />
                 {errors.next && <p className="text-xs text-destructive">{errors.next}</p>}
               </div>
+
+              {/* Confirm password + real-time match */}
               <div className="space-y-1.5">
                 <Label htmlFor="pw_confirm">Confirm New Password</Label>
-                <Input id="pw_confirm" type="password" value={pw.confirm} onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))} />
-                {errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}
+                <Input
+                  id="pw_confirm"
+                  type="password"
+                  value={pw.confirm}
+                  onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))}
+                  placeholder="Repeat new password"
+                  className={confirmMismatch ? 'border-red-400 focus-visible:ring-red-400' : confirmMatch ? 'border-green-500 focus-visible:ring-green-500' : ''}
+                />
+                {confirmMismatch && <p className="text-xs text-destructive">Passwords don't match.</p>}
+                {confirmMatch    && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="h-3 w-3" /> Passwords match</p>}
+                {errors.confirm  && !confirmMismatch && <p className="text-xs text-destructive">{errors.confirm}</p>}
               </div>
-              <Button type="submit" variant="outline" disabled={pwSaving}>
+
+              <Button type="submit" variant="outline" disabled={pwSaving || !!confirmMismatch}>
                 {pwSaving ? "Updating…" : "Update Password"}
               </Button>
             </form>
