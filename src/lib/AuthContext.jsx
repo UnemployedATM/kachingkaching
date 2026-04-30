@@ -20,12 +20,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      await loadStaff(u?.id ?? null);
-      setIsLoadingAuth(false);
-    });
+    // onAuthStateChange fires INITIAL_SESSION immediately on load —
+    // let it be the single source of truth so getSession() doesn't race.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // If there's no session, onAuthStateChange won't fire with a user,
+      // so we must resolve loading here.
+      if (!session) {
+        setIsLoadingAuth(false);
+      }
+    }).catch(() => setIsLoadingAuth(false));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
@@ -33,9 +36,19 @@ export const AuthProvider = ({ children }) => {
       if (!u) {
         setStaffRecord(null);
         setIsLoadingAuth(false);
-      } else if (event === 'SIGNED_IN') {
-        await loadStaff(u.id);
-        setIsLoadingAuth(false);
+      } else if (
+        event === 'INITIAL_SESSION' ||
+        event === 'SIGNED_IN' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'USER_UPDATED'
+      ) {
+        try {
+          await loadStaff(u.id);
+        } catch {
+          setStaffRecord(null);
+        } finally {
+          setIsLoadingAuth(false);
+        }
       }
     });
 
