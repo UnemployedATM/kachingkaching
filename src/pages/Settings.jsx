@@ -96,7 +96,6 @@ export default function Settings() {
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     const e2 = {};
-    if (!pw.current) e2.current = "Enter your current password.";
     if (pw.next.length < 6) e2.next = "Password must be at least 6 characters.";
     if (pw.next !== pw.confirm) e2.confirm = "Passwords do not match.";
     setErrors(e2);
@@ -104,15 +103,17 @@ export default function Settings() {
 
     setPwSaving(true);
 
-    // Verify current password
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: pw.current,
-    });
-    if (verifyError) {
-      setErrors({ current: "Current password is incorrect." });
-      setPwSaving(false);
-      return;
+    // Verify current password only if provided
+    if (pw.current) {
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pw.current,
+      });
+      if (verifyError) {
+        setErrors({ current: "Current password is incorrect." });
+        setPwSaving(false);
+        return;
+      }
     }
 
     const { error: updateError } = await supabase.auth.updateUser({ password: pw.next });
@@ -232,8 +233,8 @@ export default function Settings() {
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="pw_current">Current Password</Label>
-                <Input id="pw_current" type="password" value={pw.current} onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} />
+                <Label htmlFor="pw_current">Current Password <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input id="pw_current" type="password" value={pw.current} onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} placeholder="Leave blank if you forgot it" />
                 {errors.current && <p className="text-xs text-destructive">{errors.current}</p>}
               </div>
               <div className="space-y-1.5">
