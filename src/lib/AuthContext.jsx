@@ -10,25 +10,38 @@ export const AuthProvider = ({ children }) => {
 
   const loadStaff = async (userId) => {
     if (!userId) { setStaffRecord(null); return null; }
-    const { data } = await supabase
-      .from('staff')
-      .select('id, full_name, first_name, last_name, phone, role, studio_id')
-      .eq('auth_user_id', userId)
-      .maybeSingle();
-    setStaffRecord(data ?? null);
-    return data ?? null;
+    try {
+      // 6-second timeout so a slow/hung Supabase query never freezes the UI
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 6000)
+      );
+      const query = supabase
+        .from('staff')
+        .select('id, full_name, first_name, last_name, phone, role, studio_id')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+      const { data } = await Promise.race([query, timeout]);
+      setStaffRecord(data ?? null);
+      return data ?? null;
+    } catch {
+      setStaffRecord(null);
+      return null;
+    }
   };
 
   useEffect(() => {
-    // onAuthStateChange fires INITIAL_SESSION immediately on load —
-    // let it be the single source of truth so getSession() doesn't race.
+    // Hard safety net: if nothing resolves in 8s, unblock the UI
+    const safetyTimer = setTimeout(() => {
+      setIsLoadingAuth(false);
+      setStaffRecord((prev) => prev === undefined ? null : prev);
+    }, 8000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // If there's no session, onAuthStateChange won't fire with a user,
-      // so we must resolve loading here.
       if (!session) {
+        clearTimeout(safetyTimer);
         setIsLoadingAuth(false);
       }
-    }).catch(() => setIsLoadingAuth(false));
+    }).catch(() => { clearTimeout(safetyTimer); setIsLoadingAuth(false); });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
@@ -36,23 +49,20 @@ export const AuthProvider = ({ children }) => {
       if (!u) {
         setStaffRecord(null);
         setIsLoadingAuth(false);
+        clearTimeout(safetyTimer);
       } else if (
         event === 'INITIAL_SESSION' ||
         event === 'SIGNED_IN' ||
         event === 'TOKEN_REFRESHED' ||
         event === 'USER_UPDATED'
       ) {
-        try {
-          await loadStaff(u.id);
-        } catch {
-          setStaffRecord(null);
-        } finally {
-          setIsLoadingAuth(false);
-        }
+        await loadStaff(u.id); // timeout handled inside loadStaff
+        setIsLoadingAuth(false);
+        clearTimeout(safetyTimer);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(safetyTimer); };
   }, []);
 
   const logout = () => supabase.auth.signOut();
