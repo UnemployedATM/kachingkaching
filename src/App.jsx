@@ -49,7 +49,6 @@ const AppRoutes = () => {
         path="/*"
         element={
           !isAuthenticated ? <Navigate to="/login" replace /> :
-          needsStudioSetup ? <Navigate to="/setup" replace /> :
           <AuthenticatedRoutes />
         }
       />

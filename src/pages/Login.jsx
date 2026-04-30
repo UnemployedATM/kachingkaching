@@ -105,20 +105,8 @@ export default function Login() {
       return;
     }
 
-    if (mode === 'signin') {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) { setError(authError.message); setLoading(false); }
-    } else {
-      const { error: authError } = await supabase.auth.signUp({ email, password });
-      if (authError) {
-        setError(authError.message);
-        setLoading(false);
-      } else {
-        setMessage('Account created — you can sign in now.');
-        setMode('signin');
-        setLoading(false);
-      }
-    }
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) { setError(authError.message); setLoading(false); }
   };
 
   const switchMode = (next) => { setMode(next); setError(''); setMessage(''); };
@@ -236,30 +224,14 @@ export default function Login() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          {mode === 'reset' ? (
-            <>
-              Back to{' '}
-              <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
-                Sign in
-              </button>
-            </>
-          ) : mode === 'signin' ? (
-            <>
-              Don't have an account?{' '}
-              <button type="button" onClick={() => switchMode('signup')} className="text-primary hover:underline font-medium">
-                Sign up
-              </button>
-            </>
-          ) : mode !== 'new-password' ? (
-            <>
-              Already have an account?{' '}
-              <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
-                Sign in
-              </button>
-            </>
-          ) : null}
-        </p>
+        {mode === 'reset' && (
+          <p className="text-center text-sm text-muted-foreground">
+            Back to{' '}
+            <button type="button" onClick={() => switchMode('signin')} className="text-primary hover:underline font-medium">
+              Sign in
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );
