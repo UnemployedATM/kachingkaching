@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [studio, setStudio]           = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
-  const loadStaff = async (userId) => {
+  const loadStaff = async (userId, userEmail) => {
     if (!userId) { setStaffRecord(null); return null; }
     try {
       // 6-second timeout so a slow/hung Supabase query never freezes the UI
@@ -21,7 +21,23 @@ export const AuthProvider = ({ children }) => {
         .select('id, full_name, first_name, last_name, phone, role, studio_id')
         .eq('auth_user_id', userId)
         .maybeSingle();
-      const { data } = await Promise.race([query, timeout]);
+      let { data } = await Promise.race([query, timeout]);
+
+      // Fallback: invited owners have a staff record keyed by email but no auth_user_id yet
+      if (!data && userEmail) {
+        const { data: byEmail } = await supabase
+          .from('staff')
+          .select('id, full_name, first_name, last_name, phone, role, studio_id')
+          .eq('email', userEmail)
+          .is('auth_user_id', null)
+          .maybeSingle();
+        if (byEmail) {
+          // Self-heal: write auth_user_id so future logins use the fast path
+          await supabase.from('staff').update({ auth_user_id: userId }).eq('id', byEmail.id);
+          data = byEmail;
+        }
+      }
+
       setStaffRecord(data ?? null);
 
       // Fetch studio branding if this staff member is linked to a studio
@@ -71,7 +87,7 @@ export const AuthProvider = ({ children }) => {
         event === 'TOKEN_REFRESHED' ||
         event === 'USER_UPDATED'
       ) {
-        await loadStaff(u.id); // timeout handled inside loadStaff
+        await loadStaff(u.id, u.email); // timeout handled inside loadStaff
         setIsLoadingAuth(false);
         clearTimeout(safetyTimer);
       }
@@ -83,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => supabase.auth.signOut();
 
   const reloadStaff = async () => {
-    if (user) await loadStaff(user.id);
+    if (user) await loadStaff(user.id, user.email);
   };
 
   // Still loading if auth check isn't done, or if user is logged in but staff query hasn't returned yet
