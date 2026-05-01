@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const EMPTY = { name: "", description: "", duration_minutes: 60, default_capacity: 10, color: "#6366f1" };
+const EMPTY = { name: "", description: "", duration_minutes: 60, default_capacity: 10, color: "#6366f1", price_cents: "" };
 
 export default function ClassTypeForm({ open, onOpenChange, classType, onSave }) {
   const [form, setForm] = useState(EMPTY);
@@ -18,6 +18,7 @@ export default function ClassTypeForm({ open, onOpenChange, classType, onSave })
       duration_minutes: classType.duration_minutes || 60,
       default_capacity: classType.default_capacity || 10,
       color:            classType.color || "#6366f1",
+      price_cents:      classType.price_cents != null ? String(classType.price_cents) : "",
     } : EMPTY);
   }, [classType, open]);
 
@@ -26,7 +27,12 @@ export default function ClassTypeForm({ open, onOpenChange, classType, onSave })
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await onSave({ ...form, duration_minutes: Number(form.duration_minutes), default_capacity: Number(form.default_capacity) });
+    await onSave({
+      ...form,
+      duration_minutes: Number(form.duration_minutes),
+      default_capacity: Number(form.default_capacity),
+      price_cents: form.price_cents !== "" ? Number(form.price_cents) : null,
+    });
     setSaving(false);
     onOpenChange(false);
   };
@@ -55,6 +61,18 @@ export default function ClassTypeForm({ open, onOpenChange, classType, onSave })
               <Label htmlFor="capacity">Default Capacity</Label>
               <Input id="capacity" type="number" min="1" value={form.default_capacity} onChange={(e) => set("default_capacity", e.target.value)} required />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="price">Drop-In Price (cents, MXN)</Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              value={form.price_cents}
+              onChange={(e) => set("price_cents", e.target.value)}
+              placeholder="e.g. 60000 = $600 MXN"
+            />
+            <p className="text-xs text-muted-foreground">Leave blank if class packs / bundles only</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="color">Calendar Color</Label>

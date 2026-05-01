@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import ClassTypeForm from "@/components/classes/ClassTypeForm";
 import SessionForm from "@/components/classes/SessionForm";
 import SetupNotice from "@/components/shared/SetupNotice";
+import { useAuth } from "@/lib/AuthContext";
 
 const sessionStatusStyles = {
   scheduled: "bg-primary/10 text-primary border-primary/20",
@@ -19,6 +20,8 @@ const sessionStatusStyles = {
 
 export default function Classes() {
   const queryClient = useQueryClient();
+  const { staffRecord } = useAuth();
+  const studioId = staffRecord?.studio_id;
   const [tab, setTab]                           = useState("sessions");
   const [typeFormOpen, setTypeFormOpen]         = useState(false);
   const [sessionFormOpen, setSessionFormOpen]   = useState(false);
@@ -42,14 +45,16 @@ export default function Classes() {
   const deleteSession = useMutation({ mutationFn: (id) => base44.entities.ClassSession.delete(id),         onSuccess: invalidate });
 
   const handleSaveType = async (data) => {
-    if (editingType) await updateType.mutateAsync({ id: editingType.id, d: data });
-    else             await createType.mutateAsync(data);
+    const payload = studioId ? { ...data, studio_id: studioId } : data;
+    if (editingType) await updateType.mutateAsync({ id: editingType.id, d: payload });
+    else             await createType.mutateAsync(payload);
     setEditingType(null);
   };
 
   const handleSaveSession = async (data) => {
-    if (editingSession) await updateSession.mutateAsync({ id: editingSession.id, d: data });
-    else                await createSession.mutateAsync(data);
+    const payload = studioId ? { ...data, studio_id: studioId } : data;
+    if (editingSession) await updateSession.mutateAsync({ id: editingSession.id, d: payload });
+    else                await createSession.mutateAsync(payload);
     setEditingSession(null);
   };
 

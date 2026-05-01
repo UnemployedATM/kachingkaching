@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import PlanForm from "@/components/memberships/PlanForm";
 import ClientMembershipForm from "@/components/memberships/ClientMembershipForm";
 import SetupNotice from "@/components/shared/SetupNotice";
+import { useAuth } from "@/lib/AuthContext";
 
 const membershipStatusStyles = {
   active:    "bg-primary/10 text-primary border-primary/20",
@@ -22,6 +23,8 @@ const TYPE_LABELS = { drop_in: "Drop-In", class_pack: "Class Pack", monthly: "Mo
 
 export default function Memberships() {
   const queryClient = useQueryClient();
+  const { staffRecord } = useAuth();
+  const studioId = staffRecord?.studio_id;
   const [tab, setTab]                                 = useState("clients");
   const [planFormOpen, setplanFormOpen]               = useState(false);
   const [clientMemFormOpen, setClientMemFormOpen]     = useState(false);
@@ -44,8 +47,9 @@ export default function Memberships() {
   const deleteMem  = useMutation({ mutationFn: (id) => base44.entities.ClientMembership.delete(id),            onSuccess: invalidate });
 
   const handleSavePlan = async (data) => {
-    if (editingPlan) await updatePlan.mutateAsync({ id: editingPlan.id, d: data });
-    else             await createPlan.mutateAsync(data);
+    const payload = { ...data, is_active: true, ...(studioId ? { studio_id: studioId } : {}) };
+    if (editingPlan) await updatePlan.mutateAsync({ id: editingPlan.id, d: payload });
+    else             await createPlan.mutateAsync(payload);
     setEditingPlan(null);
   };
 
