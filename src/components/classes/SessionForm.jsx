@@ -12,6 +12,7 @@ const EMPTY = { class_type_id: "", instructor_id: "", date: "", start_time: "09:
 export default function SessionForm({ open, onOpenChange, session, classTypes, instructors, onSave }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     if (session) {
@@ -34,24 +35,29 @@ export default function SessionForm({ open, onOpenChange, session, classTypes, i
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaveError(null);
     setSaving(true);
 
-    const selectedType = classTypes.find((t) => t.id === form.class_type_id);
-    const starts_at = new Date(`${form.date}T${form.start_time}`).toISOString();
-    const ends_at   = addMinutes(new Date(starts_at), selectedType?.duration_minutes || 60).toISOString();
+    try {
+      const selectedType = classTypes.find((t) => t.id === form.class_type_id);
+      const starts_at = new Date(`${form.date}T${form.start_time}`).toISOString();
+      const ends_at   = addMinutes(new Date(starts_at), selectedType?.duration_minutes || 60).toISOString();
 
-    await onSave({
-      class_type_id: form.class_type_id,
-      instructor_id: form.instructor_id || null,
-      starts_at,
-      ends_at,
-      max_capacity:  Number(form.max_capacity) || selectedType?.default_capacity || 10,
-      notes:         form.notes,
-      status:        form.status,
-    });
-
-    setSaving(false);
-    onOpenChange(false);
+      await onSave({
+        class_type_id: form.class_type_id,
+        instructor_id: form.instructor_id || null,
+        starts_at,
+        ends_at,
+        max_capacity:  Number(form.max_capacity) || selectedType?.default_capacity || 10,
+        notes:         form.notes,
+        status:        form.status,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      setSaveError(err?.message ?? 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -130,6 +136,9 @@ export default function SessionForm({ open, onOpenChange, session, classTypes, i
             <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} className="h-16" placeholder="e.g. Bring your own mat" />
           </div>
 
+          {saveError && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{saveError}</p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving || !form.class_type_id}>{saving ? "Saving…" : session ? "Update" : "Schedule"}</Button>

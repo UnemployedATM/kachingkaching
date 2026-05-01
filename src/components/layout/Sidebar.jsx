@@ -1,69 +1,73 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, Info, Shield } from "lucide-react";
+import {
+  LogOut, Info, Shield,
+  LayoutDashboard, CalendarDays, BookOpen,
+  ClipboardList, Users, BadgeCheck,
+  CreditCard, Package, Grid3X3, Settings,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import LordIcon from "@/components/ui/LordIcon";
 
 const navItems = [
   {
     path: "/",
     label: "Dashboard",
-    icon: "https://cdn.lordicon.com/wjyqkiew.json",
+    Icon: LayoutDashboard,
     info: "Overview of today's activity — upcoming bookings, revenue summary, attendance stats, and recent clients.",
   },
   {
     path: "/calendar",
     label: "Calendar",
-    icon: "https://cdn.lordicon.com/ogkflacg.json",
+    Icon: CalendarDays,
     info: "Visual day/week view of all scheduled class sessions. Quickly see what's happening and when.",
   },
   {
     path: "/classes",
     label: "Classes",
-    icon: "https://cdn.lordicon.com/kndkiwmb.json",
+    Icon: BookOpen,
     info: "Manage your class types (e.g. Yoga, Pilates) and schedule individual sessions with instructors and capacity.",
   },
   {
     path: "/bookings",
     label: "Bookings",
-    icon: "https://cdn.lordicon.com/abfymgfk.json",
+    Icon: ClipboardList,
     info: "All client reservations in one place. Add, edit, cancel, or confirm bookings and track attendance.",
   },
   {
     path: "/clients",
     label: "Clients",
-    icon: "https://cdn.lordicon.com/dnoiydox.json",
+    Icon: Users,
     info: "Your full client directory. View profiles, booking history, payment records, and personal notes.",
   },
   {
     path: "/memberships",
     label: "Memberships",
-    icon: "https://cdn.lordicon.com/sbiheqdr.json",
+    Icon: BadgeCheck,
     info: "Create membership plans (drop-in, class packs, monthly) and assign them to clients to track credits and expiry.",
   },
   {
     path: "/payments",
     label: "Payments",
-    icon: "https://cdn.lordicon.com/dpirpnzh.json",
+    Icon: CreditCard,
     info: "Log and track all payments. Mark pending payments as paid, issue refunds, and view revenue totals.",
   },
   {
     path: "/inventory",
     label: "Inventory",
-    icon: "https://cdn.lordicon.com/msetyebo.json",
+    Icon: Package,
     info: "Track studio equipment — mats, reformers, props. Monitor status (available, maintenance, retired) and quantities.",
   },
   {
     path: "/floor-plan",
     label: "Floor Plan",
-    icon: "https://cdn.lordicon.com/aniibgkj.json",
+    Icon: Grid3X3,
     info: "Visual 5×5 grid of your studio space. Assign equipment to specific slots to map your physical layout.",
   },
   {
     path: "/settings",
     label: "Settings",
-    icon: "https://cdn.lordicon.com/hwcrbhbp.json",
+    Icon: Settings,
     info: "Update your personal profile, name, phone, email address, and change your password.",
   },
 ];
@@ -150,12 +154,9 @@ export default function Sidebar({ open, onClose }) {
                         : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                     )}
                   >
-                    <LordIcon
-                      src={item.icon}
-                      trigger={isActive ? "loop" : "hover"}
-                      size={18}
-                      primary={isActive ? "#3f6840" : "#94a3b8"}
-                      secondary={isActive ? "#7da87b" : "#cbd5e1"}
+                    <item.Icon
+                      style={{ width: 18, height: 18, flexShrink: 0 }}
+                      className={isActive ? "text-primary" : "text-slate-400"}
                     />
                     {item.label}
                   </Link>

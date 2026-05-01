@@ -17,6 +17,7 @@ const TYPES = [
 export default function PlanForm({ open, onOpenChange, plan, onSave }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     setForm(plan ? {
@@ -33,17 +34,23 @@ export default function PlanForm({ open, onOpenChange, plan, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaveError(null);
     setSaving(true);
-    await onSave({
-      name:            form.name,
-      type:            form.type,
-      price_cents:     Number(form.price_cents),
-      credits:         form.credits !== "" ? Number(form.credits) : null,
-      validity_days:   form.validity_days !== "" ? Number(form.validity_days) : null,
-      stripe_price_id: form.stripe_price_id || null,
-    });
-    setSaving(false);
-    onOpenChange(false);
+    try {
+      await onSave({
+        name:            form.name,
+        type:            form.type,
+        price_cents:     Number(form.price_cents),
+        credits:         form.credits !== "" ? Number(form.credits) : null,
+        validity_days:   form.validity_days !== "" ? Number(form.validity_days) : null,
+        stripe_price_id: form.stripe_price_id || null,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      setSaveError(err?.message ?? 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isUnlimited = form.type === "monthly" || form.type === "annual";
@@ -97,6 +104,9 @@ export default function PlanForm({ open, onOpenChange, plan, onSave }) {
             <Label htmlFor="stripe">Stripe Price ID</Label>
             <Input id="stripe" value={form.stripe_price_id} onChange={(e) => set("stripe_price_id", e.target.value)} placeholder="price_xxx (add later)" />
           </div>
+          {saveError && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{saveError}</p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>{saving ? "Saving…" : plan ? "Update" : "Create Plan"}</Button>

@@ -10,6 +10,7 @@ const EMPTY = { name: "", description: "", duration_minutes: 60, default_capacit
 export default function ClassTypeForm({ open, onOpenChange, classType, onSave }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     setForm(classType ? {
@@ -26,15 +27,21 @@ export default function ClassTypeForm({ open, onOpenChange, classType, onSave })
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaveError(null);
     setSaving(true);
-    await onSave({
-      ...form,
-      duration_minutes: Number(form.duration_minutes),
-      default_capacity: Number(form.default_capacity),
-      price_cents: form.price_cents !== "" ? Number(form.price_cents) : null,
-    });
-    setSaving(false);
-    onOpenChange(false);
+    try {
+      await onSave({
+        ...form,
+        duration_minutes: Number(form.duration_minutes),
+        default_capacity: Number(form.default_capacity),
+        price_cents: form.price_cents !== "" ? Number(form.price_cents) : null,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      setSaveError(err?.message ?? 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -81,6 +88,9 @@ export default function ClassTypeForm({ open, onOpenChange, classType, onSave })
               <span className="text-sm text-muted-foreground">{form.color}</span>
             </div>
           </div>
+          {saveError && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{saveError}</p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>{saving ? "Saving…" : classType ? "Update" : "Create"}</Button>
