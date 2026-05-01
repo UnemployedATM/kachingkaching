@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, Info } from "lucide-react";
+import { LogOut, Info, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -70,7 +70,7 @@ const navItems = [
 
 export default function Sidebar({ open, onClose }) {
   const location = useLocation();
-  const { logout, staffRecord, user } = useAuth();
+  const { logout, staffRecord, studio, user } = useAuth();
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -92,12 +92,20 @@ export default function Sidebar({ open, onClose }) {
           {/* Brand */}
           <div className="p-6 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-[#3f6840] flex items-center justify-center shadow-sm">
-                <span className="text-white text-base font-bold">S</span>
+              <div
+                className="h-9 w-9 rounded-xl flex items-center justify-center shadow-sm"
+                style={{ backgroundColor: studio?.primary_color || '#3f6840' }}
+              >
+                {studio?.logo_url
+                  ? <img src={studio.logo_url} alt="logo" className="h-9 w-9 rounded-xl object-cover" />
+                  : <span className="text-white text-base font-bold">
+                      {(studio?.brand_name || studio?.name || 'S')[0].toUpperCase()}
+                    </span>
+                }
               </div>
               <div>
                 <h1 className="font-display text-lg font-semibold text-sidebar-foreground leading-tight">
-                  Serenity
+                  {studio?.brand_name || studio?.name || 'Serenity'}
                 </h1>
                 <p className="text-xs text-muted-foreground">Studio Manager</p>
               </div>
@@ -106,6 +114,28 @@ export default function Sidebar({ open, onClose }) {
 
           {/* Nav */}
           <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
+            {/* Control Panel — superadmin only */}
+            {staffRecord?.role === 'superadmin' && (() => {
+              const isActive = location.pathname === '/control';
+              return (
+                <div className="flex items-center gap-1 mb-1">
+                  <Link
+                    to="/control"
+                    onClick={onClose}
+                    className={cn(
+                      "flex items-center gap-3 flex-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <Shield className={cn("h-4.5 w-4.5 shrink-0", isActive ? "text-primary" : "text-slate-400")} style={{ width: 18, height: 18 }} />
+                    Control Panel
+                  </Link>
+                </div>
+              );
+            })()}
+
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (

@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser]               = useState(null);
   const [staffRecord, setStaffRecord] = useState(undefined); // undefined = not yet loaded
+  const [studio, setStudio]           = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const loadStaff = async (userId) => {
@@ -22,9 +23,23 @@ export const AuthProvider = ({ children }) => {
         .maybeSingle();
       const { data } = await Promise.race([query, timeout]);
       setStaffRecord(data ?? null);
+
+      // Fetch studio branding if this staff member is linked to a studio
+      if (data?.studio_id) {
+        const { data: studioData } = await supabase
+          .from('studios')
+          .select('id, name, brand_name, primary_color, logo_url, tagline')
+          .eq('id', data.studio_id)
+          .maybeSingle();
+        setStudio(studioData ?? null);
+      } else {
+        setStudio(null);
+      }
+
       return data ?? null;
     } catch {
       setStaffRecord(null);
+      setStudio(null);
       return null;
     }
   };
@@ -78,6 +93,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       user,
       staffRecord,
+      studio,
       isAuthenticated: !!user,
       // True when logged in but no studio linked yet — show setup screen
       needsStudioSetup: !!user && staffRecord !== undefined && !staffRecord?.studio_id,
